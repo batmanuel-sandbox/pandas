@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+#
+# Check if a compatible version of a python module is installed
+#
+# usage: check_python_module <module> <min_version>
+#
+
+from __future__ import print_function
+import sys
+import importlib
+import argparse
+
+parser = argparse.ArgumentParser(description="Check presence and version of a Python module")
+parser.add_argument("module", help="python module to check")
+parser.add_argument("min_version", help="minimum version")
+parser.add_argument("-v", "--verbose", action="store_true")
+args = parser.parse_args()
+
+modname = args.module
+version = args.min_version
+
+#
+# See if numpy is installed in the first place
+#
+try:
+    module = importlib.import_module(modname)
+except ImportError:
+    print("error: %(module)s is not installed."
+          " Please install %(module)s v%(needVer)s or later and try again." % {
+              'module': modname,
+              'needVer': version
+          },
+          file=sys.stderr)
+    exit(-1)
+
+#
+# Check version compatibility
+#
+needVer = list(map(int, version.split('.')))
+moduleVersion = module.__version__
+# Split at + to check for development version (PEP 440)
+moduleVersion = moduleVersion.split('+')
+haveVer = list(map(int, moduleVersion[0].split('.'))) + [0] * len(needVer)
+for a, b in zip(needVer, haveVer):
+    if a > b:
+        print("error: %(module)s version too old (v%(haveVer)s)."
+              " Please install %(module)s v%(needVer)s or later and try again." % {
+                  'module': modname,
+                  'haveVer': module.__version__,
+                  'needVer': version
+              },
+              file=sys.stderr)
+        exit(-1)
+    elif a < b:
+        break
+
+if args.verbose:
+    print("Using externally provided %s v%s." % (modname, module.__version__))
+
+# OK.
+exit(0)

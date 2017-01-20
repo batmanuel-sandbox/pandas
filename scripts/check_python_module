@@ -20,7 +20,7 @@ modname = args.module
 version = args.min_version
 
 #
-# See if numpy is installed in the first place
+# See if module is installed in the first place
 #
 try:
     module = importlib.import_module(modname)
